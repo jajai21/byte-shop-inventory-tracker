@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Product, PriceHistory } from '../types';
 import { toast } from "@/components/ui/sonner";
@@ -24,8 +23,174 @@ export const useProducts = () => {
   return context;
 };
 
-// Sample computer products data
-const sampleProducts: Product[] = [
+// Imported products from the SQL statement
+const importedProducts: Product[] = [
+  {
+    id: '11',
+    code: 'AD0001',
+    name: 'Toshiba Canvio 1 TB',
+    quantity: 10,
+    unit: 'ea',
+    price: 79.99,
+    category: 'Storage',
+    createdAt: new Date().toISOString()
+  },
+  {
+    id: '12',
+    code: 'AD0002',
+    name: 'WD Ultra 1TB',
+    quantity: 15,
+    unit: 'ea',
+    price: 89.99,
+    category: 'Storage',
+    createdAt: new Date().toISOString()
+  },
+  {
+    id: '13',
+    code: 'AD0003',
+    name: 'Seagate Bracuda 1TB',
+    quantity: 12,
+    unit: 'ea',
+    price: 84.99,
+    category: 'Storage',
+    createdAt: new Date().toISOString()
+  },
+  {
+    id: '14',
+    code: 'AD0004',
+    name: 'Transcend 1 TB',
+    quantity: 8,
+    unit: 'ea',
+    price: 74.99,
+    category: 'Storage',
+    createdAt: new Date().toISOString()
+  },
+  {
+    id: '15',
+    code: 'AD0006',
+    name: 'Chuables',
+    quantity: 20,
+    unit: 'ea',
+    price: 29.99,
+    category: 'Peripheral',
+    createdAt: new Date().toISOString()
+  },
+  {
+    id: '16',
+    code: 'AD001',
+    name: 'Keyboard',
+    quantity: 30,
+    unit: 'ea',
+    price: 10.00,
+    category: 'Peripheral',
+    createdAt: new Date().toISOString()
+  },
+  {
+    id: '17',
+    code: 'AD002',
+    name: 'Mouse',
+    quantity: 25,
+    unit: 'ea',
+    price: 5.00,
+    category: 'Peripheral',
+    createdAt: new Date().toISOString()
+  },
+  {
+    id: '18',
+    code: 'AD003',
+    name: 'Monitor',
+    quantity: 10,
+    unit: 'ea',
+    price: 199.99,
+    category: 'Monitor',
+    createdAt: new Date().toISOString()
+  },
+  {
+    id: '19',
+    code: 'AD004',
+    name: 'USB Cable',
+    quantity: 50,
+    unit: 'ea',
+    price: 7.99,
+    category: 'Peripheral',
+    createdAt: new Date().toISOString()
+  },
+  {
+    id: '20',
+    code: 'AD005',
+    name: 'Headphones',
+    quantity: 15,
+    unit: 'ea',
+    price: 29.99,
+    category: 'Peripheral',
+    createdAt: new Date().toISOString()
+  },
+  // More products being added
+  {
+    id: '21',
+    code: 'AD006',
+    name: 'Webcam',
+    quantity: 20,
+    unit: 'ea',
+    price: 45.00,
+    category: 'Peripheral',
+    createdAt: new Date().toISOString()
+  },
+  {
+    id: '22',
+    code: 'AD007',
+    name: 'Mousepad',
+    quantity: 40,
+    unit: 'ea',
+    price: 12.99,
+    category: 'Peripheral',
+    createdAt: new Date().toISOString()
+  },
+  {
+    id: '23',
+    code: 'AD008',
+    name: 'HDMI Cable',
+    quantity: 35,
+    unit: 'ea',
+    price: 15.99,
+    category: 'Peripheral',
+    createdAt: new Date().toISOString()
+  },
+  {
+    id: '24',
+    code: 'AE0009',
+    name: 'Microphone',
+    quantity: 10,
+    unit: 'ea',
+    price: 59.99,
+    category: 'Peripheral',
+    createdAt: new Date().toISOString()
+  },
+  {
+    id: '25',
+    code: 'AK0001',
+    name: 'HP Pavilion DV6000',
+    quantity: 5,
+    unit: 'pc',
+    price: 599.99,
+    category: 'Laptop',
+    createdAt: new Date().toISOString()
+  }
+];
+
+// Sample additional price history
+const additionalPriceHistory: PriceHistory[] = [
+  { id: '7', productId: '11', price: 89.99, date: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString() },
+  { id: '8', productId: '11', price: 84.99, date: new Date(Date.now() - 40 * 24 * 60 * 60 * 1000).toISOString() },
+  { id: '9', productId: '11', price: 79.99, date: new Date().toISOString() },
+  { id: '10', productId: '12', price: 99.99, date: new Date(Date.now() - 50 * 24 * 60 * 60 * 1000).toISOString() },
+  { id: '11', productId: '12', price: 94.99, date: new Date(Date.now() - 25 * 24 * 60 * 60 * 1000).toISOString() },
+  { id: '12', productId: '12', price: 89.99, date: new Date().toISOString() }
+];
+
+// Combine the original sample products with the new imported products
+const allSampleProducts = [
+  // Original sample products
   {
     id: '1',
     code: 'CP0001',
@@ -125,17 +290,22 @@ const sampleProducts: Product[] = [
     price: 129.99,
     category: 'Peripheral',
     createdAt: new Date().toISOString()
-  }
+  },
+  // Add the new imported products
+  ...importedProducts
 ];
 
-// Sample price history
-const samplePriceHistory: PriceHistory[] = [
+// Combine the original sample price history with the new additional price history
+const allPriceHistory = [
+  // Original price history
   { id: '1', productId: '1', price: 449.99, date: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString() },
   { id: '2', productId: '1', price: 429.99, date: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString() },
   { id: '3', productId: '1', price: 399.99, date: new Date().toISOString() },
   { id: '4', productId: '3', price: 799.99, date: new Date(Date.now() - 45 * 24 * 60 * 60 * 1000).toISOString() },
   { id: '5', productId: '3', price: 749.99, date: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000).toISOString() },
-  { id: '6', productId: '3', price: 699.99, date: new Date().toISOString() }
+  { id: '6', productId: '3', price: 699.99, date: new Date().toISOString() },
+  // Add the additional price history
+  ...additionalPriceHistory
 ];
 
 export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -148,8 +318,8 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
     if (storedProducts) {
       setProducts(JSON.parse(storedProducts));
     } else {
-      setProducts(sampleProducts);
-      localStorage.setItem('byteshop_products', JSON.stringify(sampleProducts));
+      setProducts(allSampleProducts);
+      localStorage.setItem('byteshop_products', JSON.stringify(allSampleProducts));
     }
 
     // Load price history from localStorage or use sample data
@@ -157,8 +327,8 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
     if (storedPriceHistory) {
       setPriceHistory(JSON.parse(storedPriceHistory));
     } else {
-      setPriceHistory(samplePriceHistory);
-      localStorage.setItem('byteshop_price_history', JSON.stringify(samplePriceHistory));
+      setPriceHistory(allPriceHistory);
+      localStorage.setItem('byteshop_price_history', JSON.stringify(allPriceHistory));
     }
   }, []);
 
