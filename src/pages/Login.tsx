@@ -7,11 +7,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { MonitorDot } from "lucide-react";
+import TwoFactorVerification from "@/components/auth/TwoFactorVerification";
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [showTwoFactor, setShowTwoFactor] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
 
@@ -20,9 +22,15 @@ const Login = () => {
     setIsLoading(true);
     const success = await login(email, password);
     setIsLoading(false);
+    
     if (success) {
-      navigate("/products");
+      // Instead of navigating directly, show 2FA verification
+      setShowTwoFactor(true);
     }
+  };
+
+  const handleTwoFactorSuccess = () => {
+    navigate("/products");
   };
 
   return (
@@ -38,53 +46,58 @@ const Login = () => {
             Enter your credentials to access your account
           </CardDescription>
         </CardHeader>
-        <form onSubmit={handleLogin}>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="email@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="password">Password</Label>
+        
+        {showTwoFactor ? (
+          <TwoFactorVerification email={email} onSuccess={handleTwoFactorSuccess} />
+        ) : (
+          <form onSubmit={handleLogin}>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="email@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
               </div>
-              <Input
-                id="password"
-                type="password"
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
-            </div>
-          </CardContent>
-          <CardFooter className="flex flex-col space-y-4">
-            <Button
-              type="submit"
-              className="w-full bg-byteshop-purple hover:bg-byteshop-purple/90"
-              disabled={isLoading}
-            >
-              {isLoading ? "Signing in..." : "Sign in"}
-            </Button>
-            <div className="text-center text-sm">
-              Don't have an account?{" "}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="password">Password</Label>
+                </div>
+                <Input
+                  id="password"
+                  type="password"
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
+              </div>
+            </CardContent>
+            <CardFooter className="flex flex-col space-y-4">
               <Button
-                variant="link"
-                className="p-0 h-auto text-byteshop-purple"
-                onClick={() => navigate("/signup")}
+                type="submit"
+                className="w-full bg-byteshop-purple hover:bg-byteshop-purple/90"
+                disabled={isLoading}
               >
-                Sign up
+                {isLoading ? "Signing in..." : "Sign in"}
               </Button>
-            </div>
-          </CardFooter>
-        </form>
+              <div className="text-center text-sm">
+                Don't have an account?{" "}
+                <Button
+                  variant="link"
+                  className="p-0 h-auto text-byteshop-purple"
+                  onClick={() => navigate("/signup")}
+                >
+                  Sign up
+                </Button>
+              </div>
+            </CardFooter>
+          </form>
+        )}
       </Card>
     </div>
   );

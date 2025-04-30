@@ -9,7 +9,159 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      department: {
+        Row: {
+          deptcode: string
+          deptname: string | null
+        }
+        Insert: {
+          deptcode: string
+          deptname?: string | null
+        }
+        Update: {
+          deptcode?: string
+          deptname?: string | null
+        }
+        Relationships: []
+      }
+      job: {
+        Row: {
+          jobcode: string
+          jobdesc: string | null
+        }
+        Insert: {
+          jobcode: string
+          jobdesc?: string | null
+        }
+        Update: {
+          jobcode?: string
+          jobdesc?: string | null
+        }
+        Relationships: []
+      }
+      Job_history: {
+        Row: {
+          deptcode: string | null
+          effdate: string | null
+          empno: number
+          jobcode: string | null
+          salary: number | null
+        }
+        Insert: {
+          deptcode?: string | null
+          effdate?: string | null
+          empno: number
+          jobcode?: string | null
+          salary?: number | null
+        }
+        Update: {
+          deptcode?: string | null
+          effdate?: string | null
+          empno?: number
+          jobcode?: string | null
+          salary?: number | null
+        }
+        Relationships: []
+      }
+      Payment: {
+        Row: {
+          amount: number | null
+          orno: string
+          paydate: string | null
+          transno: string | null
+        }
+        Insert: {
+          amount?: number | null
+          orno: string
+          paydate?: string | null
+          transno?: string | null
+        }
+        Update: {
+          amount?: number | null
+          orno?: string
+          paydate?: string | null
+          transno?: string | null
+        }
+        Relationships: []
+      }
+      pricehist: {
+        Row: {
+          effdate: string
+          prodcode: string | null
+          unitprice: number | null
+        }
+        Insert: {
+          effdate: string
+          prodcode?: string | null
+          unitprice?: number | null
+        }
+        Update: {
+          effdate?: string
+          prodcode?: string | null
+          unitprice?: number | null
+        }
+        Relationships: []
+      }
+      product_rows: {
+        Row: {
+          current_price: string | null
+          description: string | null
+          prodcode: string
+          unit: string | null
+        }
+        Insert: {
+          current_price?: string | null
+          description?: string | null
+          prodcode: string
+          unit?: string | null
+        }
+        Update: {
+          current_price?: string | null
+          description?: string | null
+          prodcode?: string
+          unit?: string | null
+        }
+        Relationships: []
+      }
+      sales_rows: {
+        Row: {
+          custno: string | null
+          empno: number | null
+          salesdate: string | null
+          transno: string
+        }
+        Insert: {
+          custno?: string | null
+          empno?: number | null
+          salesdate?: string | null
+          transno: string
+        }
+        Update: {
+          custno?: string | null
+          empno?: number | null
+          salesdate?: string | null
+          transno?: string
+        }
+        Relationships: []
+      }
+      salesdetail_rows: {
+        Row: {
+          prodcode: string | null
+          quantity: number | null
+          transno: string
+        }
+        Insert: {
+          prodcode?: string | null
+          quantity?: number | null
+          transno: string
+        }
+        Update: {
+          prodcode?: string | null
+          quantity?: number | null
+          transno?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

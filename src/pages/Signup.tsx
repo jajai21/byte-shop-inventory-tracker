@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { MonitorDot } from "lucide-react";
+import TwoFactorVerification from "@/components/auth/TwoFactorVerification";
 
 const Signup = () => {
   const [email, setEmail] = useState("");
@@ -14,6 +15,7 @@ const Signup = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [passwordError, setPasswordError] = useState("");
+  const [showTwoFactor, setShowTwoFactor] = useState(false);
   const { signup } = useAuth();
   const navigate = useNavigate();
 
@@ -31,8 +33,13 @@ const Signup = () => {
     setIsLoading(false);
     
     if (success) {
-      navigate("/products");
+      // Instead of navigating directly, show 2FA verification
+      setShowTwoFactor(true);
     }
+  };
+
+  const handleTwoFactorSuccess = () => {
+    navigate("/products");
   };
 
   return (
@@ -48,65 +55,70 @@ const Signup = () => {
             Enter your information to create your account
           </CardDescription>
         </CardHeader>
-        <form onSubmit={handleSignup}>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="email@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="confirmPassword">Confirm Password</Label>
-              <Input
-                id="confirmPassword"
-                type="password"
-                placeholder="••••••••"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                required
-              />
-              {passwordError && (
-                <p className="text-sm text-red-500">{passwordError}</p>
-              )}
-            </div>
-          </CardContent>
-          <CardFooter className="flex flex-col space-y-4">
-            <Button
-              type="submit"
-              className="w-full bg-byteshop-purple hover:bg-byteshop-purple/90"
-              disabled={isLoading}
-            >
-              {isLoading ? "Creating account..." : "Create account"}
-            </Button>
-            <div className="text-center text-sm">
-              Already have an account?{" "}
+        
+        {showTwoFactor ? (
+          <TwoFactorVerification email={email} onSuccess={handleTwoFactorSuccess} />
+        ) : (
+          <form onSubmit={handleSignup}>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="email@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="password">Password</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="confirmPassword">Confirm Password</Label>
+                <Input
+                  id="confirmPassword"
+                  type="password"
+                  placeholder="••••••••"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  required
+                />
+                {passwordError && (
+                  <p className="text-sm text-red-500">{passwordError}</p>
+                )}
+              </div>
+            </CardContent>
+            <CardFooter className="flex flex-col space-y-4">
               <Button
-                variant="link"
-                className="p-0 h-auto text-byteshop-purple"
-                onClick={() => navigate("/login")}
+                type="submit"
+                className="w-full bg-byteshop-purple hover:bg-byteshop-purple/90"
+                disabled={isLoading}
               >
-                Sign in
+                {isLoading ? "Creating account..." : "Create account"}
               </Button>
-            </div>
-          </CardFooter>
-        </form>
+              <div className="text-center text-sm">
+                Already have an account?{" "}
+                <Button
+                  variant="link"
+                  className="p-0 h-auto text-byteshop-purple"
+                  onClick={() => navigate("/login")}
+                >
+                  Sign in
+                </Button>
+              </div>
+            </CardFooter>
+          </form>
+        )}
       </Card>
     </div>
   );
