@@ -3,6 +3,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User } from '../types';
 import { toast } from "@/components/ui/sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { Session } from '@supabase/supabase-js';
 
 interface AuthContextType {
   user: User | null;
@@ -10,6 +11,7 @@ interface AuthContextType {
   signup: (email: string, password: string) => Promise<boolean>;
   logout: () => void;
   isAuthenticated: boolean;
+  session: Session | null;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -24,77 +26,103 @@ export const useAuth = () => {
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
-    // Check if user is logged in on component mount
-    const storedUser = localStorage.getItem('byteshop_user');
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-      setIsAuthenticated(true);
-    }
+    // Set up auth state listener FIRST
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, currentSession) => {
+        setSession(currentSession);
+        if (currentSession && currentSession.user) {
+          const userData: User = {
+            id: currentSession.user.id,
+            email: currentSession.user.email || '',
+            password: '' // We don't store passwords
+          };
+          setUser(userData);
+          setIsAuthenticated(true);
+        } else {
+          setUser(null);
+          setIsAuthenticated(false);
+        }
+      }
+    );
+
+    // THEN check for existing session
+    supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
+      setSession(currentSession);
+      if (currentSession && currentSession.user) {
+        const userData: User = {
+          id: currentSession.user.id,
+          email: currentSession.user.email || '',
+          password: '' // We don't store passwords
+        };
+        setUser(userData);
+        setIsAuthenticated(true);
+      }
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
-      // In a real app with Supabase, you'd validate against the backend
-      const users = JSON.parse(localStorage.getItem('byteshop_users') || '[]');
-      const foundUser = users.find((u: User) => u.email === email && u.password === password);
+      const { data, error } = await supabase.auth.signInWithPassword({ 
+        email, 
+        password 
+      });
       
-      if (foundUser) {
-        setUser(foundUser);
-        setIsAuthenticated(true);
-        localStorage.setItem('byteshop_user', JSON.stringify(foundUser));
+      if (error) {
+        toast.error(error.message);
+        return false;
+      }
+      
+      if (data.user) {
         toast.success("Logged in successfully");
         return true;
       } else {
-        toast.error("Invalid email or password");
+        toast.error("Login failed");
         return false;
       }
-    } catch (error) {
-      toast.error("Login failed");
+    } catch (error: any) {
+      toast.error(error.message || "Login failed");
       return false;
     }
   };
 
   const signup = async (email: string, password: string): Promise<boolean> => {
     try {
-      // In a real app, you'd send this to a backend
-      const users = JSON.parse(localStorage.getItem('byteshop_users') || '[]');
+      const { data, error } = await supabase.auth.signUp({ 
+        email, 
+        password 
+      });
       
-      // Check if user already exists
-      if (users.some((u: User) => u.email === email)) {
-        toast.error("User already exists");
+      if (error) {
+        toast.error(error.message);
         return false;
       }
       
-      const newUser: User = {
-        id: Date.now().toString(),
-        email,
-        password
-      };
-      
-      users.push(newUser);
-      localStorage.setItem('byteshop_users', JSON.stringify(users));
-      
-      // Auto-login after signup
-      setUser(newUser);
-      setIsAuthenticated(true);
-      localStorage.setItem('byteshop_user', JSON.stringify(newUser));
-      
-      toast.success("Account created successfully");
-      return true;
-    } catch (error) {
-      toast.error("Signup failed");
+      if (data.user) {
+        toast.success("Account created successfully. Please check your email for confirmation.");
+        return true;
+      } else {
+        toast.error("Signup failed");
+        return false;
+      }
+    } catch (error: any) {
+      toast.error(error.message || "Signup failed");
       return false;
     }
   };
 
-  const logout = () => {
-    setUser(null);
-    setIsAuthenticated(false);
-    localStorage.removeItem('byteshop_user');
-    toast.success("Logged out successfully");
+  const logout = async () => {
+    try {
+      await supabase.auth.signOut();
+      toast.success("Logged out successfully");
+    } catch (error) {
+      toast.error("Logout failed");
+    }
   };
 
   return (
@@ -103,7 +131,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       login, 
       signup, 
       logout, 
-      isAuthenticated
+      isAuthenticated,
+      session
     }}>
       {children}
     </AuthContext.Provider>
