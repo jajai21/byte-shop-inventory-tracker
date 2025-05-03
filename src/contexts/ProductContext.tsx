@@ -37,9 +37,9 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
       try {
         setIsLoading(true);
         const { data: productsData, error: productsError } = await supabase
-          .from('products')
+          .from('product')
           .select('*')
-          .order('name');
+          .order('prodcode');
 
         if (productsError) {
           toast.error(`Error fetching products: ${productsError.message}`);
@@ -48,23 +48,21 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
         // Convert Supabase data to Product type
         const formattedProducts: Product[] = productsData.map(item => ({
-          id: item.id,
-          code: item.code,
-          name: item.name,
-          quantity: item.quantity,
-          unit: item.unit,
-          price: Number(item.price),
-          category: item.category,
-          createdAt: item.created_at
+          id: item.prodcode, // Using prodcode as ID
+          code: item.prodcode,
+          name: item.description || 'No Description',
+          quantity: 0, // Default value since not in original table
+          unit: item.unit || 'piece',
+          price: 0, // Will be updated from price history
+          category: 'Uncategorized', // Default category
+          createdAt: new Date().toISOString()
         }));
-
-        setProducts(formattedProducts);
 
         // Fetch price history
         const { data: historyData, error: historyError } = await supabase
-          .from('price_history')
+          .from('pricehist')
           .select('*')
-          .order('date');
+          .order('effdate', { ascending: false });
 
         if (historyError) {
           toast.error(`Error fetching price history: ${historyError.message}`);
@@ -73,12 +71,25 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
         // Convert Supabase data to PriceHistory type
         const formattedHistory: PriceHistory[] = historyData.map(item => ({
-          id: item.id,
-          productId: item.product_id,
-          price: Number(item.price),
-          date: item.date
+          id: `${item.prodcode}-${item.effdate}`, // Create a unique ID
+          productId: item.prodcode,
+          price: Number(item.unitprice) || 0,
+          date: item.effdate
         }));
 
+        // Update product prices with the most recent price
+        const updatedProducts = formattedProducts.map(product => {
+          const latestPrice = formattedHistory
+            .filter(history => history.productId === product.code)
+            .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0];
+          
+          return {
+            ...product,
+            price: latestPrice ? latestPrice.price : 0
+          };
+        });
+
+        setProducts(updatedProducts);
         setPriceHistory(formattedHistory);
       } catch (error: any) {
         toast.error(`Error loading data: ${error.message}`);
@@ -90,40 +101,37 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
     fetchProducts();
   }, []);
 
-  // Generate next product code based on category
+  // Generate next product code based on existing codes
   const getNextProductCode = () => {
-    return `CP${String(products.length + 1).padStart(4, '0')}`;
+    if (products.length === 0) {
+      return 'PR0001';
+    }
+    
+    // Extract numeric parts from existing codes
+    const codes = products
+      .map(p => p.code)
+      .map(code => {
+        const match = code.match(/^[A-Z]+(\d+)$/);
+        return match ? parseInt(match[1]) : 0;
+      });
+    
+    const maxCode = Math.max(...codes);
+    return `PR${String(maxCode + 1).padStart(4, '0')}`;
   };
 
   // Add a new product
   const addProduct = async (productData: Omit<Product, 'id' | 'code' | 'createdAt'>) => {
     try {
-      const prefix = productData.category.substring(0, 2).toUpperCase();
+      const prodcode = getNextProductCode();
       
-      // Find the highest code number for this category
-      const categoryCodes = products
-        .filter(p => p.code.startsWith(prefix))
-        .map(p => parseInt(p.code.substring(2), 10));
-      
-      const nextCodeNumber = categoryCodes.length > 0 
-        ? Math.max(...categoryCodes) + 1 
-        : 1;
-
-      const code = `${prefix}${String(nextCodeNumber).padStart(4, '0')}`;
-
       // Insert new product into Supabase
-      const { data: newProduct, error: productError } = await supabase
-        .from('products')
+      const { error: productError } = await supabase
+        .from('product')
         .insert([{
-          code: code,
-          name: productData.name,
-          quantity: productData.quantity,
-          unit: productData.unit,
-          price: productData.price,
-          category: productData.category
-        }])
-        .select()
-        .single();
+          prodcode: prodcode,
+          description: productData.name,
+          unit: productData.unit
+        }]);
 
       if (productError) {
         toast.error(`Error adding product: ${productError.message}`);
@@ -132,11 +140,11 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
       // Insert initial price history
       const { error: priceError } = await supabase
-        .from('price_history')
+        .from('pricehist')
         .insert([{
-          product_id: newProduct.id,
-          price: productData.price,
-          date: new Date().toISOString()
+          prodcode: prodcode,
+          unitprice: productData.price,
+          effdate: new Date().toISOString().split('T')[0] // YYYY-MM-DD format
         }]);
 
       if (priceError) {
@@ -144,31 +152,31 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
         return;
       }
 
-      // Convert to our Product type
-      const formattedProduct: Product = {
-        id: newProduct.id,
-        code: newProduct.code,
-        name: newProduct.name,
-        quantity: newProduct.quantity,
-        unit: newProduct.unit,
-        price: Number(newProduct.price),
-        category: newProduct.category,
-        createdAt: newProduct.created_at
+      // Create formatted Product object for state
+      const newProduct: Product = {
+        id: prodcode,
+        code: prodcode,
+        name: productData.name,
+        quantity: productData.quantity,
+        unit: productData.unit,
+        price: productData.price,
+        category: productData.category,
+        createdAt: new Date().toISOString()
       };
 
       // Update local state
-      setProducts(prev => [...prev, formattedProduct]);
+      setProducts(prev => [...prev, newProduct]);
       setPriceHistory(prev => [
         ...prev,
         {
-          id: Date.now().toString(), // Temporary ID until we get the real one
-          productId: newProduct.id,
-          price: Number(newProduct.price),
-          date: new Date().toISOString()
+          id: `${prodcode}-${new Date().toISOString().split('T')[0]}`,
+          productId: prodcode,
+          price: productData.price,
+          date: new Date().toISOString().split('T')[0]
         }
       ]);
 
-      toast.success(`Product ${formattedProduct.name} added successfully`);
+      toast.success(`Product ${newProduct.name} added successfully`);
     } catch (error: any) {
       toast.error(`Error adding product: ${error.message}`);
     }
@@ -181,15 +189,12 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
       
       // Update product in Supabase
       const { error: productError } = await supabase
-        .from('products')
+        .from('product')
         .update({
-          name: updatedProduct.name,
-          quantity: updatedProduct.quantity,
-          unit: updatedProduct.unit,
-          price: updatedProduct.price,
-          category: updatedProduct.category
+          description: updatedProduct.name,
+          unit: updatedProduct.unit
         })
-        .eq('id', updatedProduct.id);
+        .eq('prodcode', updatedProduct.id);
 
       if (productError) {
         toast.error(`Error updating product: ${productError.message}`);
@@ -200,11 +205,11 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
       if (existingProduct && existingProduct.price !== updatedProduct.price) {
         // Add new price history entry
         const { error: priceError } = await supabase
-          .from('price_history')
+          .from('pricehist')
           .insert([{
-            product_id: updatedProduct.id,
-            price: updatedProduct.price,
-            date: new Date().toISOString()
+            prodcode: updatedProduct.id,
+            unitprice: updatedProduct.price,
+            effdate: new Date().toISOString().split('T')[0] // YYYY-MM-DD format
           }]);
 
         if (priceError) {
@@ -216,10 +221,10 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
         setPriceHistory(prev => [
           ...prev,
           {
-            id: Date.now().toString(), // Temporary ID until we get the real one
+            id: `${updatedProduct.id}-${new Date().toISOString().split('T')[0]}`,
             productId: updatedProduct.id,
             price: updatedProduct.price,
-            date: new Date().toISOString()
+            date: new Date().toISOString().split('T')[0]
           }
         ]);
       }
@@ -241,11 +246,11 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
       const productToDelete = products.find(product => product.id === id);
       if (!productToDelete) return;
 
-      // Delete product from Supabase
+      // Delete product from Supabase (cascade will handle price history deletion)
       const { error } = await supabase
-        .from('products')
+        .from('product')
         .delete()
-        .eq('id', id);
+        .eq('prodcode', id);
 
       if (error) {
         toast.error(`Error deleting product: ${error.message}`);
