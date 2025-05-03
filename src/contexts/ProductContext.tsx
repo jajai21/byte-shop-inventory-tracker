@@ -1,6 +1,8 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Product, PriceHistory } from '../types';
 import { toast } from "@/components/ui/sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 interface ProductContextType {
   products: Product[];
@@ -11,6 +13,7 @@ interface ProductContextType {
   getNextProductCode: () => string;
   getProductPriceHistory: (productId: string) => PriceHistory[];
   searchProducts: (query: string) => Product[];
+  isLoading: boolean;
 }
 
 const ProductContext = createContext<ProductContextType | undefined>(undefined);
@@ -23,326 +26,69 @@ export const useProducts = () => {
   return context;
 };
 
-// Imported products from the SQL statement
-const importedProducts: Product[] = [
-  {
-    id: '11',
-    code: 'AD0001',
-    name: 'Toshiba Canvio 1 TB',
-    quantity: 10,
-    unit: 'ea',
-    price: 79.99,
-    category: 'Storage',
-    createdAt: new Date().toISOString()
-  },
-  {
-    id: '12',
-    code: 'AD0002',
-    name: 'WD Ultra 1TB',
-    quantity: 15,
-    unit: 'ea',
-    price: 89.99,
-    category: 'Storage',
-    createdAt: new Date().toISOString()
-  },
-  {
-    id: '13',
-    code: 'AD0003',
-    name: 'Seagate Bracuda 1TB',
-    quantity: 12,
-    unit: 'ea',
-    price: 84.99,
-    category: 'Storage',
-    createdAt: new Date().toISOString()
-  },
-  {
-    id: '14',
-    code: 'AD0004',
-    name: 'Transcend 1 TB',
-    quantity: 8,
-    unit: 'ea',
-    price: 74.99,
-    category: 'Storage',
-    createdAt: new Date().toISOString()
-  },
-  {
-    id: '15',
-    code: 'AD0006',
-    name: 'Chuables',
-    quantity: 20,
-    unit: 'ea',
-    price: 29.99,
-    category: 'Peripheral',
-    createdAt: new Date().toISOString()
-  },
-  {
-    id: '16',
-    code: 'AD001',
-    name: 'Keyboard',
-    quantity: 30,
-    unit: 'ea',
-    price: 10.00,
-    category: 'Peripheral',
-    createdAt: new Date().toISOString()
-  },
-  {
-    id: '17',
-    code: 'AD002',
-    name: 'Mouse',
-    quantity: 25,
-    unit: 'ea',
-    price: 5.00,
-    category: 'Peripheral',
-    createdAt: new Date().toISOString()
-  },
-  {
-    id: '18',
-    code: 'AD003',
-    name: 'Monitor',
-    quantity: 10,
-    unit: 'ea',
-    price: 199.99,
-    category: 'Monitor',
-    createdAt: new Date().toISOString()
-  },
-  {
-    id: '19',
-    code: 'AD004',
-    name: 'USB Cable',
-    quantity: 50,
-    unit: 'ea',
-    price: 7.99,
-    category: 'Peripheral',
-    createdAt: new Date().toISOString()
-  },
-  {
-    id: '20',
-    code: 'AD005',
-    name: 'Headphones',
-    quantity: 15,
-    unit: 'ea',
-    price: 29.99,
-    category: 'Peripheral',
-    createdAt: new Date().toISOString()
-  },
-  // More products being added
-  {
-    id: '21',
-    code: 'AD006',
-    name: 'Webcam',
-    quantity: 20,
-    unit: 'ea',
-    price: 45.00,
-    category: 'Peripheral',
-    createdAt: new Date().toISOString()
-  },
-  {
-    id: '22',
-    code: 'AD007',
-    name: 'Mousepad',
-    quantity: 40,
-    unit: 'ea',
-    price: 12.99,
-    category: 'Peripheral',
-    createdAt: new Date().toISOString()
-  },
-  {
-    id: '23',
-    code: 'AD008',
-    name: 'HDMI Cable',
-    quantity: 35,
-    unit: 'ea',
-    price: 15.99,
-    category: 'Peripheral',
-    createdAt: new Date().toISOString()
-  },
-  {
-    id: '24',
-    code: 'AE0009',
-    name: 'Microphone',
-    quantity: 10,
-    unit: 'ea',
-    price: 59.99,
-    category: 'Peripheral',
-    createdAt: new Date().toISOString()
-  },
-  {
-    id: '25',
-    code: 'AK0001',
-    name: 'HP Pavilion DV6000',
-    quantity: 5,
-    unit: 'pc',
-    price: 599.99,
-    category: 'Laptop',
-    createdAt: new Date().toISOString()
-  }
-];
-
-// Sample additional price history
-const additionalPriceHistory: PriceHistory[] = [
-  { id: '7', productId: '11', price: 89.99, date: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString() },
-  { id: '8', productId: '11', price: 84.99, date: new Date(Date.now() - 40 * 24 * 60 * 60 * 1000).toISOString() },
-  { id: '9', productId: '11', price: 79.99, date: new Date().toISOString() },
-  { id: '10', productId: '12', price: 99.99, date: new Date(Date.now() - 50 * 24 * 60 * 60 * 1000).toISOString() },
-  { id: '11', productId: '12', price: 94.99, date: new Date(Date.now() - 25 * 24 * 60 * 60 * 1000).toISOString() },
-  { id: '12', productId: '12', price: 89.99, date: new Date().toISOString() }
-];
-
-// Combine the original sample products with the new imported products
-const allSampleProducts = [
-  // Original sample products
-  {
-    id: '1',
-    code: 'CP0001',
-    name: 'AMD Ryzen 9 5900X Processor',
-    quantity: 15,
-    unit: 'piece',
-    price: 399.99,
-    category: 'Processor',
-    createdAt: new Date().toISOString()
-  },
-  {
-    id: '2',
-    code: 'MB0001',
-    name: 'ASUS ROG Strix B550-F Gaming Motherboard',
-    quantity: 8,
-    unit: 'piece',
-    price: 189.99,
-    category: 'Motherboard',
-    createdAt: new Date().toISOString()
-  },
-  {
-    id: '3',
-    code: 'GP0001',
-    name: 'NVIDIA GeForce RTX 3080 Graphics Card',
-    quantity: 5,
-    unit: 'piece',
-    price: 699.99,
-    category: 'Graphics Card',
-    createdAt: new Date().toISOString()
-  },
-  {
-    id: '4',
-    code: 'RM0001',
-    name: 'Corsair Vengeance RGB Pro 32GB DDR4 RAM',
-    quantity: 20,
-    unit: 'kit',
-    price: 149.99,
-    category: 'Memory',
-    createdAt: new Date().toISOString()
-  },
-  {
-    id: '5',
-    code: 'SS0001',
-    name: 'Samsung 970 EVO Plus 1TB NVMe SSD',
-    quantity: 25,
-    unit: 'piece',
-    price: 129.99,
-    category: 'Storage',
-    createdAt: new Date().toISOString()
-  },
-  {
-    id: '6',
-    code: 'PS0001',
-    name: 'Corsair RM850x Power Supply',
-    quantity: 12,
-    unit: 'piece',
-    price: 129.99,
-    category: 'Power Supply',
-    createdAt: new Date().toISOString()
-  },
-  {
-    id: '7',
-    code: 'CS0001',
-    name: 'NZXT H510 Mid Tower Case',
-    quantity: 10,
-    unit: 'piece',
-    price: 69.99,
-    category: 'Case',
-    createdAt: new Date().toISOString()
-  },
-  {
-    id: '8',
-    code: 'CL0001',
-    name: 'NZXT Kraken X63 RGB AIO CPU Cooler',
-    quantity: 7,
-    unit: 'piece',
-    price: 149.99,
-    category: 'Cooling',
-    createdAt: new Date().toISOString()
-  },
-  {
-    id: '9',
-    code: 'MN0001',
-    name: 'Dell S2721DGF 27" QHD Gaming Monitor',
-    quantity: 6,
-    unit: 'piece',
-    price: 329.99,
-    category: 'Monitor',
-    createdAt: new Date().toISOString()
-  },
-  {
-    id: '10',
-    code: 'KB0001',
-    name: 'Logitech G Pro X Mechanical Keyboard',
-    quantity: 18,
-    unit: 'piece',
-    price: 129.99,
-    category: 'Peripheral',
-    createdAt: new Date().toISOString()
-  },
-  // Add the new imported products
-  ...importedProducts
-];
-
-// Combine the original sample price history with the new additional price history
-const allPriceHistory = [
-  // Original price history
-  { id: '1', productId: '1', price: 449.99, date: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString() },
-  { id: '2', productId: '1', price: 429.99, date: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString() },
-  { id: '3', productId: '1', price: 399.99, date: new Date().toISOString() },
-  { id: '4', productId: '3', price: 799.99, date: new Date(Date.now() - 45 * 24 * 60 * 60 * 1000).toISOString() },
-  { id: '5', productId: '3', price: 749.99, date: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000).toISOString() },
-  { id: '6', productId: '3', price: 699.99, date: new Date().toISOString() },
-  // Add the additional price history
-  ...additionalPriceHistory
-];
-
 export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [products, setProducts] = useState<Product[]>([]);
   const [priceHistory, setPriceHistory] = useState<PriceHistory[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
+  // Fetch products from Supabase
   useEffect(() => {
-    // Load products from localStorage or use sample data
-    const storedProducts = localStorage.getItem('byteshop_products');
-    if (storedProducts) {
-      setProducts(JSON.parse(storedProducts));
-    } else {
-      setProducts(allSampleProducts);
-      localStorage.setItem('byteshop_products', JSON.stringify(allSampleProducts));
-    }
+    const fetchProducts = async () => {
+      try {
+        setIsLoading(true);
+        const { data: productsData, error: productsError } = await supabase
+          .from('products')
+          .select('*')
+          .order('name');
 
-    // Load price history from localStorage or use sample data
-    const storedPriceHistory = localStorage.getItem('byteshop_price_history');
-    if (storedPriceHistory) {
-      setPriceHistory(JSON.parse(storedPriceHistory));
-    } else {
-      setPriceHistory(allPriceHistory);
-      localStorage.setItem('byteshop_price_history', JSON.stringify(allPriceHistory));
-    }
+        if (productsError) {
+          toast.error(`Error fetching products: ${productsError.message}`);
+          return;
+        }
+
+        // Convert Supabase data to Product type
+        const formattedProducts: Product[] = productsData.map(item => ({
+          id: item.id,
+          code: item.code,
+          name: item.name,
+          quantity: item.quantity,
+          unit: item.unit,
+          price: Number(item.price),
+          category: item.category,
+          createdAt: item.created_at
+        }));
+
+        setProducts(formattedProducts);
+
+        // Fetch price history
+        const { data: historyData, error: historyError } = await supabase
+          .from('price_history')
+          .select('*')
+          .order('date');
+
+        if (historyError) {
+          toast.error(`Error fetching price history: ${historyError.message}`);
+          return;
+        }
+
+        // Convert Supabase data to PriceHistory type
+        const formattedHistory: PriceHistory[] = historyData.map(item => ({
+          id: item.id,
+          productId: item.product_id,
+          price: Number(item.price),
+          date: item.date
+        }));
+
+        setPriceHistory(formattedHistory);
+      } catch (error: any) {
+        toast.error(`Error loading data: ${error.message}`);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchProducts();
   }, []);
-
-  // Helper function to save products to localStorage
-  const saveProducts = (newProducts: Product[]) => {
-    localStorage.setItem('byteshop_products', JSON.stringify(newProducts));
-    setProducts(newProducts);
-  };
-
-  // Helper function to save price history to localStorage
-  const savePriceHistory = (newPriceHistory: PriceHistory[]) => {
-    localStorage.setItem('byteshop_price_history', JSON.stringify(newPriceHistory));
-    setPriceHistory(newPriceHistory);
-  };
 
   // Generate next product code based on category
   const getNextProductCode = () => {
@@ -350,77 +96,170 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
   };
 
   // Add a new product
-  const addProduct = (productData: Omit<Product, 'id' | 'code' | 'createdAt'>) => {
-    const prefix = productData.category.substring(0, 2).toUpperCase();
-    
-    // Find the highest code number for this category
-    const categoryCodes = products
-      .filter(p => p.code.startsWith(prefix))
-      .map(p => parseInt(p.code.substring(2)));
-    
-    const nextCodeNumber = categoryCodes.length > 0 
-      ? Math.max(...categoryCodes) + 1 
-      : 1;
+  const addProduct = async (productData: Omit<Product, 'id' | 'code' | 'createdAt'>) => {
+    try {
+      const prefix = productData.category.substring(0, 2).toUpperCase();
+      
+      // Find the highest code number for this category
+      const categoryCodes = products
+        .filter(p => p.code.startsWith(prefix))
+        .map(p => parseInt(p.code.substring(2), 10));
+      
+      const nextCodeNumber = categoryCodes.length > 0 
+        ? Math.max(...categoryCodes) + 1 
+        : 1;
 
-    const newProduct: Product = {
-      id: Date.now().toString(),
-      code: `${prefix}${String(nextCodeNumber).padStart(4, '0')}`,
-      createdAt: new Date().toISOString(),
-      ...productData
-    };
+      const code = `${prefix}${String(nextCodeNumber).padStart(4, '0')}`;
 
-    const newProducts = [...products, newProduct];
-    saveProducts(newProducts);
+      // Insert new product into Supabase
+      const { data: newProduct, error: productError } = await supabase
+        .from('products')
+        .insert([{
+          code: code,
+          name: productData.name,
+          quantity: productData.quantity,
+          unit: productData.unit,
+          price: productData.price,
+          category: productData.category
+        }])
+        .select()
+        .single();
 
-    // Add initial price history entry
-    const newPriceHistoryEntry: PriceHistory = {
-      id: Date.now().toString(),
-      productId: newProduct.id,
-      price: newProduct.price,
-      date: new Date().toISOString()
-    };
+      if (productError) {
+        toast.error(`Error adding product: ${productError.message}`);
+        return;
+      }
 
-    const newPriceHistory = [...priceHistory, newPriceHistoryEntry];
-    savePriceHistory(newPriceHistory);
+      // Insert initial price history
+      const { error: priceError } = await supabase
+        .from('price_history')
+        .insert([{
+          product_id: newProduct.id,
+          price: productData.price,
+          date: new Date().toISOString()
+        }]);
 
-    toast.success(`Product ${newProduct.name} added successfully`);
+      if (priceError) {
+        toast.error(`Error adding price history: ${priceError.message}`);
+        return;
+      }
+
+      // Convert to our Product type
+      const formattedProduct: Product = {
+        id: newProduct.id,
+        code: newProduct.code,
+        name: newProduct.name,
+        quantity: newProduct.quantity,
+        unit: newProduct.unit,
+        price: Number(newProduct.price),
+        category: newProduct.category,
+        createdAt: newProduct.created_at
+      };
+
+      // Update local state
+      setProducts(prev => [...prev, formattedProduct]);
+      setPriceHistory(prev => [
+        ...prev,
+        {
+          id: Date.now().toString(), // Temporary ID until we get the real one
+          productId: newProduct.id,
+          price: Number(newProduct.price),
+          date: new Date().toISOString()
+        }
+      ]);
+
+      toast.success(`Product ${formattedProduct.name} added successfully`);
+    } catch (error: any) {
+      toast.error(`Error adding product: ${error.message}`);
+    }
   };
 
   // Update an existing product
-  const updateProduct = (updatedProduct: Product) => {
-    const newProducts = products.map(product =>
-      product.id === updatedProduct.id ? updatedProduct : product
-    );
-    
-    saveProducts(newProducts);
+  const updateProduct = async (updatedProduct: Product) => {
+    try {
+      const existingProduct = products.find(p => p.id === updatedProduct.id);
+      
+      // Update product in Supabase
+      const { error: productError } = await supabase
+        .from('products')
+        .update({
+          name: updatedProduct.name,
+          quantity: updatedProduct.quantity,
+          unit: updatedProduct.unit,
+          price: updatedProduct.price,
+          category: updatedProduct.category
+        })
+        .eq('id', updatedProduct.id);
 
-    // Check if price has changed
-    const existingProduct = products.find(p => p.id === updatedProduct.id);
-    if (existingProduct && existingProduct.price !== updatedProduct.price) {
-      // Add new price history entry
-      const newPriceHistoryEntry: PriceHistory = {
-        id: Date.now().toString(),
-        productId: updatedProduct.id,
-        price: updatedProduct.price,
-        date: new Date().toISOString()
-      };
+      if (productError) {
+        toast.error(`Error updating product: ${productError.message}`);
+        return;
+      }
 
-      const newPriceHistory = [...priceHistory, newPriceHistoryEntry];
-      savePriceHistory(newPriceHistory);
+      // Check if price has changed
+      if (existingProduct && existingProduct.price !== updatedProduct.price) {
+        // Add new price history entry
+        const { error: priceError } = await supabase
+          .from('price_history')
+          .insert([{
+            product_id: updatedProduct.id,
+            price: updatedProduct.price,
+            date: new Date().toISOString()
+          }]);
+
+        if (priceError) {
+          toast.error(`Error updating price history: ${priceError.message}`);
+          return;
+        }
+
+        // Update price history in local state
+        setPriceHistory(prev => [
+          ...prev,
+          {
+            id: Date.now().toString(), // Temporary ID until we get the real one
+            productId: updatedProduct.id,
+            price: updatedProduct.price,
+            date: new Date().toISOString()
+          }
+        ]);
+      }
+
+      // Update local state
+      setProducts(prev => 
+        prev.map(product => product.id === updatedProduct.id ? updatedProduct : product)
+      );
+
+      toast.success(`Product ${updatedProduct.name} updated successfully`);
+    } catch (error: any) {
+      toast.error(`Error updating product: ${error.message}`);
     }
-
-    toast.success(`Product ${updatedProduct.name} updated successfully`);
   };
 
   // Delete a product
-  const deleteProduct = (id: string) => {
-    const productToDelete = products.find(product => product.id === id);
-    if (!productToDelete) return;
+  const deleteProduct = async (id: string) => {
+    try {
+      const productToDelete = products.find(product => product.id === id);
+      if (!productToDelete) return;
 
-    const newProducts = products.filter(product => product.id !== id);
-    saveProducts(newProducts);
+      // Delete product from Supabase
+      const { error } = await supabase
+        .from('products')
+        .delete()
+        .eq('id', id);
 
-    toast.success(`Product ${productToDelete.name} deleted successfully`);
+      if (error) {
+        toast.error(`Error deleting product: ${error.message}`);
+        return;
+      }
+
+      // Update local state
+      setProducts(prev => prev.filter(product => product.id !== id));
+      setPriceHistory(prev => prev.filter(history => history.productId !== id));
+
+      toast.success(`Product ${productToDelete.name} deleted successfully`);
+    } catch (error: any) {
+      toast.error(`Error deleting product: ${error.message}`);
+    }
   };
 
   // Get price history for a product
@@ -451,7 +290,8 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
       deleteProduct,
       getNextProductCode,
       getProductPriceHistory,
-      searchProducts
+      searchProducts,
+      isLoading
     }}>
       {children}
     </ProductContext.Provider>

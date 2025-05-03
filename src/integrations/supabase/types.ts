@@ -165,6 +165,38 @@ export type Database = {
           },
         ]
       }
+      price_history: {
+        Row: {
+          created_at: string
+          date: string
+          id: string
+          price: number
+          product_id: string
+        }
+        Insert: {
+          created_at?: string
+          date?: string
+          id?: string
+          price: number
+          product_id: string
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          id?: string
+          price?: number
+          product_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "price_history_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pricehist: {
         Row: {
           effdate: string
@@ -206,6 +238,39 @@ export type Database = {
           description?: string | null
           prodcode?: string
           unit?: string | null
+        }
+        Relationships: []
+      }
+      products: {
+        Row: {
+          category: string
+          code: string
+          created_at: string
+          id: string
+          name: string
+          price: number | null
+          quantity: number
+          unit: string
+        }
+        Insert: {
+          category: string
+          code: string
+          created_at?: string
+          id?: string
+          name: string
+          price?: number | null
+          quantity?: number
+          unit: string
+        }
+        Update: {
+          category?: string
+          code?: string
+          created_at?: string
+          id?: string
+          name?: string
+          price?: number | null
+          quantity?: number
+          unit?: string
         }
         Relationships: []
       }

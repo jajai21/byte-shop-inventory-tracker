@@ -4,7 +4,7 @@ import MainLayout from "@/components/layouts/MainLayout";
 import { useProducts } from "@/contexts/ProductContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Edit, Plus, Search, Trash2 } from "lucide-react";
+import { Edit, Loader2, Plus, Search, Trash2 } from "lucide-react";
 import AddProductDialog from "@/components/product/AddProductDialog";
 import EditProductDialog from "@/components/product/EditProductDialog";
 import { Product } from "@/types";
@@ -37,7 +37,7 @@ import {
 } from "@/components/ui/pagination";
 
 const Products = () => {
-  const { products, searchProducts, deleteProduct } = useProducts();
+  const { products, searchProducts, deleteProduct, isLoading } = useProducts();
   const [searchQuery, setSearchQuery] = useState("");
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -116,7 +116,12 @@ const Products = () => {
           </div>
         </div>
 
-        {filteredProducts.length === 0 ? (
+        {isLoading ? (
+          <div className="flex justify-center items-center h-64">
+            <Loader2 className="h-8 w-8 animate-spin text-byteshop-purple" />
+            <span className="ml-2 text-lg">Loading products...</span>
+          </div>
+        ) : filteredProducts.length === 0 ? (
           <div className="bg-white p-8 rounded-lg shadow-sm border text-center">
             <p className="text-gray-500">
               {searchQuery 
