@@ -121,7 +121,7 @@ const EditProductDialog = ({ open, onOpenChange, product }: EditProductDialogPro
                         <SelectValue placeholder="Select unit" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="piece">Piece</SelectItem>
+                        <SelectItem value="pc">PC</SelectItem>
                         <SelectItem value="kit">Kit</SelectItem>
                         <SelectItem value="set">Set</SelectItem>
                         <SelectItem value="box">Box</SelectItem>

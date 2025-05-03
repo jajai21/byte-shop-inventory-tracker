@@ -12,7 +12,7 @@ export const formatProductData = (
     code: item.prodcode,
     name: item.description || 'No Description',
     quantity: 0, // Default value since not in original table
-    unit: item.unit || 'piece',
+    unit: item.unit || 'pc',
     price: 0, // Will be updated from price history
     category: 'Uncategorized', // Default category
     createdAt: new Date().toISOString()

@@ -30,7 +30,7 @@ const AddProductDialog = ({ open, onOpenChange }: AddProductDialogProps) => {
   const [formData, setFormData] = useState({
     name: "",
     quantity: 1,
-    unit: "piece",
+    unit: "pc",
     price: 0,
     category: "Peripheral"
   });
@@ -56,7 +56,7 @@ const AddProductDialog = ({ open, onOpenChange }: AddProductDialogProps) => {
     setFormData({
       name: "",
       quantity: 1,
-      unit: "piece",
+      unit: "pc",
       price: 0,
       category: "Peripheral"
     });
@@ -106,7 +106,7 @@ const AddProductDialog = ({ open, onOpenChange }: AddProductDialogProps) => {
                     <SelectValue placeholder="Select unit" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="piece">Piece</SelectItem>
+                    <SelectItem value="pc">PC</SelectItem>
                     <SelectItem value="kit">Kit</SelectItem>
                     <SelectItem value="set">Set</SelectItem>
                     <SelectItem value="box">Box</SelectItem>
