@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { Product, PriceHistory } from "@/types";
 import { toast } from "@/components/ui/sonner";
@@ -85,28 +84,67 @@ export const updateProductInDatabase = async (updatedProduct: Product) => {
 
 // Add new price history entry in Supabase
 export const addPriceHistoryEntry = async (productId: string, price: number) => {
-  const { error: priceError } = await supabase
+  // Create today's date in YYYY-MM-DD format
+  const today = new Date().toISOString().split('T')[0];
+  
+  // Check if a price entry for today already exists
+  const { data: existingEntries, error: checkError } = await supabase
     .from('pricehist')
-    .insert([{
-      prodcode: productId,
-      unitprice: price,
-      effdate: new Date().toISOString().split('T')[0] // YYYY-MM-DD format
-    }]);
+    .select('*')
+    .eq('prodcode', productId)
+    .eq('effdate', today);
+    
+  if (checkError) {
+    throw new Error(`Error checking price history: ${checkError.message}`);
+  }
+  
+  // If an entry for today exists, update it
+  if (existingEntries && existingEntries.length > 0) {
+    const { error: updateError } = await supabase
+      .from('pricehist')
+      .update({ unitprice: price })
+      .eq('prodcode', productId)
+      .eq('effdate', today);
+      
+    if (updateError) {
+      throw new Error(`Error updating price history: ${updateError.message}`);
+    }
+  } else {
+    // Otherwise insert a new entry
+    const { error: priceError } = await supabase
+      .from('pricehist')
+      .insert([{
+        prodcode: productId,
+        unitprice: price,
+        effdate: today
+      }]);
 
-  if (priceError) {
-    throw new Error(`Error updating price history: ${priceError.message}`);
+    if (priceError) {
+      throw new Error(`Error updating price history: ${priceError.message}`);
+    }
   }
 
   return {
-    id: `${productId}-${new Date().toISOString().split('T')[0]}`,
+    id: `${productId}-${today}`,
     productId: productId,
     price: price,
-    date: new Date().toISOString().split('T')[0]
+    date: today
   };
 };
 
 // Delete a product from Supabase
 export const deleteProductFromDatabase = async (id: string) => {
+  // First delete price history records (they have a foreign key relationship)
+  const { error: historyError } = await supabase
+    .from('pricehist')
+    .delete()
+    .eq('prodcode', id);
+
+  if (historyError) {
+    throw new Error(`Error deleting price history: ${historyError.message}`);
+  }
+
+  // Then delete the product
   const { error } = await supabase
     .from('product')
     .delete()

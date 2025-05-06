@@ -103,7 +103,25 @@ export const useProductOperations = () => {
         const newPriceHistory = await addPriceHistoryEntry(updatedProduct.id, updatedProduct.price);
 
         // Update price history in local state
-        setPriceHistory(prev => [...prev, newPriceHistory]);
+        setPriceHistory(prev => {
+          // Check if we already have an entry for today
+          const todaysDate = new Date().toISOString().split('T')[0];
+          const existingTodayEntry = prev.find(
+            h => h.productId === updatedProduct.id && h.date === todaysDate
+          );
+          
+          if (existingTodayEntry) {
+            // Update the existing entry
+            return prev.map(entry => 
+              entry.id === existingTodayEntry.id 
+                ? { ...entry, price: updatedProduct.price } 
+                : entry
+            );
+          } else {
+            // Add new entry
+            return [...prev, newPriceHistory];
+          }
+        });
       }
 
       // Update local state
