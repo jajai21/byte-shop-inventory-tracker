@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -122,9 +121,7 @@ const EditProductDialog = ({ open, onOpenChange, product }: EditProductDialogPro
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="pc">PC</SelectItem>
-                        <SelectItem value="kit">Kit</SelectItem>
-                        <SelectItem value="set">Set</SelectItem>
-                        <SelectItem value="box">Box</SelectItem>
+                        <SelectItem value="ea">EA</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>

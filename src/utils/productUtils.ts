@@ -12,7 +12,7 @@ export const formatProductData = (
     code: item.prodcode,
     name: item.description || 'No Description',
     quantity: 0, // Default value since not in original table
-    unit: item.unit || 'pc',
+    unit: item.unit || 'pc', // Changed default from 'pc' to 'pc'
     price: 0, // Will be updated from price history
     category: 'Uncategorized', // Default category
     createdAt: new Date().toISOString()
@@ -67,7 +67,8 @@ export const searchProductsList = (products: Product[], query: string) => {
   return products.filter(product => 
     product.name.toLowerCase().includes(lowerQuery) ||
     product.code.toLowerCase().includes(lowerQuery) ||
-    product.category.toLowerCase().includes(lowerQuery)
+    product.category.toLowerCase().includes(lowerQuery) ||
+    product.unit.toLowerCase().includes(lowerQuery)  // Added unit search
   );
 };
 

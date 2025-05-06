@@ -12,9 +12,7 @@ export const useProductSearch = (
   };
 
   const searchProducts = (query: string) => {
-    return useMemo(() => {
-      return searchProductsList(products, query);
-    }, [products, query]);
+    return searchProductsList(products, query);
   };
 
   return {

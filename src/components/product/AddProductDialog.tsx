@@ -107,9 +107,7 @@ const AddProductDialog = ({ open, onOpenChange }: AddProductDialogProps) => {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="pc">PC</SelectItem>
-                    <SelectItem value="kit">Kit</SelectItem>
-                    <SelectItem value="set">Set</SelectItem>
-                    <SelectItem value="box">Box</SelectItem>
+                    <SelectItem value="ea">EA</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
