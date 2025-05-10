@@ -1,73 +1,38 @@
-# Welcome to your Lovable project
+# Information Management 2 – Product Management System
 
-## Project info
+## Overview
+This project was developed for the Information Management 2 program and includes a basic Product Management System. The system is intended to handle essential product-related data, such as product details, categories, quantity, and pricing information.
 
-**URL**: https://lovable.dev/projects/4b2cc0d2-1763-4359-8733-c843aaa41b4d
+## Features
+- View and manage product list
+- Add new products with:
+     - Product Code
+     - Name
+     - Unit
+     - Quantity
+     - Price
+     - Edit and delete existing products
 
-## How can I edit this code?
+## Tools Used
+- **Frontend:** Lovable
+- **Backend:** Supabase
 
-There are several ways of editing your application.
+## Product Table Structure
+- **Product Code-** Unique ID for each product
+- **Name-** Product name
+- **Unit-** Measurement unit (e.g., pcs, ea)
+- **Quantity–** Number of items in stock
+- **Price–** Cost per unit
+- **Actions–** Edit/Delete options
+       
+### Team Members – AI Avengers:
+- Chua, Alexis Danica R.
+- Gumaga, Janfrey Ivan L.
+- Tecson, EJ Karl N.
+- Velasco, J. Jairah T.
+- Zerrudo, Yhean Akilah R.
 
-**Use Lovable**
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/4b2cc0d2-1763-4359-8733-c843aaa41b4d) and start prompting.
+## Notes
 
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
-
-**Edit a file directly in GitHub**
-
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
-
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/4b2cc0d2-1763-4359-8733-c843aaa41b4d) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+_This project is intended solely for educational purposes as part of the Information Management 2 Program._
